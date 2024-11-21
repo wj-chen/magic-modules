@@ -145,30 +145,14 @@ properties:
     type: NestedObject
     description: The view definition.
     properties:
+      - name: 'query'
+        type: String
+        description: |
+          A query that BigQuery executes when the view is referenced.
       - name: 'useLegacySql'
         type: Boolean
         description: |
-          Specifies whether to use BigQuery's legacy SQL for this view
-      - name: 'userDefinedFunctionResources'
-        type: Array
-        description: |
-          Describes user-defined function resources used in the query.
-        item_type:
-          type: NestedObject
-          properties:
-            - name: 'inlineCode'
-              type: String
-              description: |
-                An inline resource that contains code for a user-defined
-                function (UDF). Providing a inline code resource is
-                equivalent to providing a URI for a file containing the
-                same code.
-            # TODO: Convert into cross-product ResourceRef
-            - name: 'resourceUri'
-              type: String
-              description: |
-                A code resource to load from a Google Cloud Storage URI
-                (gs://bucket/path).
+          Specifies whether to use BigQuery's legacy SQL for this view.
   - name: 'timePartitioning'
     type: NestedObject
     description: |
@@ -270,6 +254,28 @@ properties:
                 - 'TIME'
                 - 'DATETIME'
                 - 'RECORD'
+                - 'FOREIGN'
+            - name: 'foreignTypeDefinition'
+              type: String
+              description: |
+                Definition of the foreign data type.
+                Only valid for top-level schema fields (not nested fields).
+                If the type is FOREIGN, this field is required.
+              min_version: beta
+      - name: 'foreignTypeInfo'
+        type: NestedObject
+        description: |
+          Specifies metadata of the foreign data type definition in field schema.
+        min_version: beta
+        properties:
+          - name: 'typeSystem'
+            type: Enum
+            description: |
+              The foreign type of the table.
+            required: true
+            enum_values:
+              - 'HIVE'
+            min_version: beta
   - name: 'encryptionConfiguration'
     type: NestedObject
     description: Custom encryption configuration
