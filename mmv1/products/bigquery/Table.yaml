@@ -145,30 +145,33 @@ properties:
     type: NestedObject
     description: The view definition.
     properties:
+      - name: 'query'
+        type: String
+        description: |
+          A query that BigQuery executes when the view is referenced.
       - name: 'useLegacySql'
         type: Boolean
         description: |
-          Specifies whether to use BigQuery's legacy SQL for this view
-      - name: 'userDefinedFunctionResources'
+          Specifies whether to use BigQuery's legacy SQL for this view.
+      - name: 'foreignDefinitions'
         type: Array
         description: |
-          Describes user-defined function resources used in the query.
+          Foreign view representations.
+        min_version: beta
         item_type:
           type: NestedObject
           properties:
-            - name: 'inlineCode'
+            - name: 'query'
               type: String
               description: |
-                An inline resource that contains code for a user-defined
-                function (UDF). Providing a inline code resource is
-                equivalent to providing a URI for a file containing the
-                same code.
-            # TODO: Convert into cross-product ResourceRef
-            - name: 'resourceUri'
+                The query that defines the view.
+              required: true
+              min_version: beta
+            - name: 'dialect'
               type: String
               description: |
-                A code resource to load from a Google Cloud Storage URI
-                (gs://bucket/path).
+                Represents the dialect of the query.
+              min_version: beta
   - name: 'timePartitioning'
     type: NestedObject
     description: |
@@ -270,6 +273,28 @@ properties:
                 - 'TIME'
                 - 'DATETIME'
                 - 'RECORD'
+                - 'FOREIGN'
+            - name: 'foreignTypeDefinition'
+              type: String
+              description: |
+                Definition of the foreign data type.
+                Only valid for top-level schema fields (not nested fields).
+                If the type is FOREIGN, this field is required.
+              min_version: beta
+      - name: 'foreignTypeInfo'
+        type: NestedObject
+        description: |
+          Specifies metadata of the foreign data type definition in field schema.
+        min_version: beta
+        properties:
+          - name: 'typeSystem'
+            type: Enum
+            description: |
+              The foreign type of the table.
+            required: true
+            enum_values:
+              - 'HIVE'
+            min_version: beta
   - name: 'encryptionConfiguration'
     type: NestedObject
     description: Custom encryption configuration
@@ -550,3 +575,75 @@ properties:
       in the namespaced format, for example "123456789012/environment" where 123456789012 is the
       ID of the parent organization or project resource for this tag key. Tag value is expected
       to be the short name, for example "Production".
+  - name: externalCatalogTableOptions
+    type: NestedObject
+    description: |
+      Options defining open source compatible table.
+    min_version: beta
+    properties:
+      - name: 'parameters'
+        type: KeyValuePairs
+        description: |
+          A map of key value pairs defining the parameters and properties of the open source table.
+          Corresponds with hive meta store table parameters. Maximum size of 4Mib.
+        min_version: beta
+      - name: 'storageDescriptor'
+        type: NestedObject
+        description: |
+          A storage descriptor containing information about the physical storage of this table.
+        min_version: beta
+        properties:
+          - name: 'storageUri'
+            type: String
+            description: |
+              The physical location of the table (e.g. `gs://spark-dataproc-data/pangea-data/case_sensitive/`
+              or `gs://spark-dataproc-data/pangea-data/*`). The maximum length is 2056 bytes.
+            min_version: beta
+          - name: 'inputFormat'
+            type: String
+            description: |
+              Specifies the fully qualified class name of the InputFormat
+              (e.g. "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat").
+              The maximum length is 128 characters.
+            min_version: beta
+          - name: 'outputFormat'
+            type: String
+            description: |
+              Specifies the fully qualified class name of the OutputFormat
+              (e.g. "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat").
+              The maximum length is 128 characters.
+            min_version: beta
+          - name: 'serdeInfo'
+            type: NestedObject
+            description: |
+              Serializer and deserializer information.
+            min_version: beta
+            properties:
+              - name: 'name'
+                type: String
+                description: |
+                  Name of the SerDe. The maximum length is 256 characters.
+                min_version: beta
+              - name: 'serializationLibrary'
+                type: String
+                description: |
+                  Specifies a fully-qualified class name of the serialization library that is
+                  responsible for the translation of data between table representation and the
+                  underlying low-level input and output format structures.
+                  The maximum length is 256 characters.
+                required: true
+                min_version: beta
+              - name: 'parameters'
+                type: KeyValuePairs
+                description: |
+                  Key-value pairs that define the initialization parameters for the serialization
+                  library. Maximum size 10 Kib.
+                min_version: beta
+      - name: 'connectionId'
+        type: String
+        description: |
+          The connection specifying the credentials to be used to read external storage, such as
+          Azure Blob, Cloud Storage, or S3. The connection is needed to read the open source table
+          from BigQuery Engine. The connection_id can have the form `<project_id>.<location_id>.<connection_id>`
+          or `projects/<project_id>/locations/<location_id>/connections/<connection_id>`.
+        min_version: beta
