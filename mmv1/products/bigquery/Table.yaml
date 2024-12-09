@@ -153,25 +153,6 @@ properties:
         type: Boolean
         description: |
           Specifies whether to use BigQuery's legacy SQL for this view.
-      - name: 'foreignDefinitions'
-        type: Array
-        description: |
-          Foreign view representations.
-        min_version: beta
-        item_type:
-          type: NestedObject
-          properties:
-            - name: 'query'
-              type: String
-              description: |
-                The query that defines the view.
-              required: true
-              min_version: beta
-            - name: 'dialect'
-              type: String
-              description: |
-                Represents the dialect of the query.
-              min_version: beta
   - name: 'timePartitioning'
     type: NestedObject
     description: |
