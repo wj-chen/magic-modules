@@ -96,12 +96,14 @@ func jsonCompareWithMapKeyOverride(key string, a, b interface{}, compareMapKeyVa
 			unionOfKeys[subKey] = true
 		}
 
-		// Add special handling for a field with foreignTypeDefinition. Since the nested schema in the definition may have been flattened on the server-side, we don't compare the type and fields.
-		//if _, ok := unionOfKeys["foreignTypeDefinition"]; ok {
-		//	delete(unionOfKeys, "type")
-		//	delete(unionOfKeys, "fields")
-		//}
+		{{- if ne $.TargetVersionName "ga" }}
+		// Disregard "type" and "fields" if "foreignTypeDefinition" is present since they may have been modified by the server.
+		if _, ok := unionOfKeys["foreignTypeDefinition"]; ok {
+			delete(unionOfKeys, "type")
+			delete(unionOfKeys, "fields")
+		}
 
+		{{- end }}
 		for subKey := range unionOfKeys {
 			eq := compareMapKeyVal(subKey, objectA, objectB)
 			if !eq {
@@ -149,22 +151,22 @@ func bigQueryTableMapKeyOverride(key string, objectA, objectB map[string]interfa
 		eq := valueIsInArray(valA, equivalentSet) && valueIsInArray(valB, equivalentSet)
 		return eq
 	case "type":
-		foreignType := ""
-		{{- if ne $.TargetVersionName "ga" }}
+		//foreignType := ""
+		//{{- if ne $.TargetVersionName "ga" }}
 		//if foreignTypeObject, ok := objectB["foreignTypeDefinition"]; ok {
 		//	foreignType = foreignTypeObject.(string)
 		//}
 		// When foreignTypeDefinition is present, don't need to check type.
-		_, okA := objectA["foreignTypeDefinition"]
-		_, okB := objectB["foreignTypeDefinition"]
-		if false || okA && okB {
-			return true
-		}
-		{{- end }}
+		//_, okA := objectA["foreignTypeDefinition"]
+		//_, okB := objectB["foreignTypeDefinition"]
+		//if false || okA && okB {
+		//	return true
+		//}
+		//{{- end }}
 		if valA == nil || valB == nil {
 			return false
 		}
-		return bigQueryTableTypeEq(valA.(string), valB.(string), foreignType)
+		return bigQueryTableTypeEq(valA.(string), valB.(string))
 	case "policyTags":
 		eq := bigQueryTableNormalizePolicyTags(valA) == nil && bigQueryTableNormalizePolicyTags(valB) == nil
 		return eq
@@ -225,12 +227,10 @@ func bigQueryTableConnectionIdSuppress(name, old, new string, _ *schema.Resource
 	return false
 }
 
-func bigQueryTableTypeEq(old, new, foreignType string) bool {
+func bigQueryTableTypeEq(old, new string) bool {
 	// Do case-insensitive comparison. https://github.com/hashicorp/terraform-provider-google/issues/9472
 	oldUpper := strings.ToUpper(old)
 	newUpper := strings.ToUpper(new)
-	foreignTypeUpper := strings.ToUpper(foreignType)
-	log.Printf("[INFO] oldUpper: %v, newUpper: %v, foreignTypeUpper: %v", oldUpper, newUpper, foreignTypeUpper)
 
 	equivalentSet1 := []interface{}{"INTEGER", "INT64"}
 	equivalentSet2 := []interface{}{"FLOAT", "FLOAT64"}
@@ -239,13 +239,7 @@ func bigQueryTableTypeEq(old, new, foreignType string) bool {
 	eq1 := valueIsInArray(oldUpper, equivalentSet1) && valueIsInArray(newUpper, equivalentSet1)
 	eq2 := valueIsInArray(oldUpper, equivalentSet2) && valueIsInArray(newUpper, equivalentSet2)
 	eq3 := valueIsInArray(oldUpper, equivalentSet3) && valueIsInArray(newUpper, equivalentSet3)
-	eq := eq0 || eq1 || eq2 || eq3
-
-	if foreignTypeUpper != "" {
-		return eq || oldUpper == foreignTypeUpper || (oldUpper == "RECORD" && strings.HasPrefix(foreignTypeUpper, "STRUCT"))
-	}
-
-	return eq
+	return eq0 || eq1 || eq2 || eq3
 }
 
 func bigQueryTableNormalizeMode(mode interface{}) string {
@@ -348,13 +342,18 @@ func resourceBigQueryTableSchemaIsChangeable(old, new interface{}, isExternalTab
 		for key := range objectNew {
 			unionOfKeys[key] = true
 		}
-		// >>>>>>>>>>>>>>>>
-		// Add special handling for a field with foreignTypeDefinition. Since the nested schema in the definition may have been flattened on the server-side, we don't compare the type and fields.
-		// if _, ok := unionOfKeys["foreignTypeDefinition"]; ok {
-		// 	delete(unionOfKeys, "type")
-		// 	delete(unionOfKeys, "fields")
-		// }
 
+		log.Printf("[DEBUG] unionOfKeys: %v", unionOfKeys)
+		{{- if ne $.TargetVersionName "ga" }}
+		// Disregard "type" and "fields" if "foreignTypeDefinition" is present since they may have been modified by the server.
+		if _, ok := unionOfKeys["foreignTypeDefinition"]; ok {
+			log.Printf("[DEBUG] foreignTypeDefinition present")
+			delete(unionOfKeys, "type")
+			delete(unionOfKeys, "fields")
+		}
+
+		{{- end }}
+		log.Printf("[DEBUG] unionOfKeys again: %v", unionOfKeys)
 		for key := range unionOfKeys {
 			valOld := objectOld[key]
 			valNew := objectNew[key]
@@ -368,19 +367,15 @@ func resourceBigQueryTableSchemaIsChangeable(old, new interface{}, isExternalTab
 					// This is invalid, so it shouldn't require a ForceNew
 					return true, nil
 				}
-				foreignType := ""
-				{{- if ne $.TargetVersionName "ga" }}
-				//if foreignTypeObject, ok := objectNew["foreignTypeDefinition"]; ok {
-				//	foreignType = foreignTypeObject.(string)
+				//{{- if ne $.TargetVersionName "ga" }}
+				// When "foreignTypeDefinition" is present, allow changes to "type".
+				//_, okOld := objectOld["foreignTypeDefinition"];
+				//_, okNew := objectNew["foreignTypeDefinition"]
+				//if false || okOld || okNew {
+				//	return true, nil
 				//}
-				// When foreignTypeDefinition is present, don't need to check type.
-				_, okOld := objectOld["foreignTypeDefinition"];
-				_, okNew := objectNew["foreignTypeDefinition"]
-				if false || okOld && okNew {
-					return true, nil
-				}
-				{{- end }}
-				if !bigQueryTableTypeEq(valOld.(string), valNew.(string), foreignType) {
+				//{{- end }}
+				if !bigQueryTableTypeEq(valOld.(string), valNew.(string)) {
 					return false, nil
 				}
 			case "mode":
@@ -392,12 +387,12 @@ func resourceBigQueryTableSchemaIsChangeable(old, new interface{}, isExternalTab
 				}
 			case "fields":
 				return resourceBigQueryTableSchemaIsChangeable(valOld, valNew, isExternalTable, false)
-			{{- if ne $.TargetVersionName "ga" }}
-			case "foreignTypeDefinition":
-				if valOld != valNew {
-					return false, nil
-				}
-			{{- end }}
+			//{{- if ne $.TargetVersionName "ga" }}
+			//case "foreignTypeDefinition":
+			//	if valOld != valNew {
+			//		return false, nil
+			//	}
+			//{{- end }}
 				// other parameters: description, policyTags and
 				// policyTags.names[] are changeable
 			}
