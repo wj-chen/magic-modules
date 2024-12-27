@@ -151,18 +151,6 @@ func bigQueryTableMapKeyOverride(key string, objectA, objectB map[string]interfa
 		eq := valueIsInArray(valA, equivalentSet) && valueIsInArray(valB, equivalentSet)
 		return eq
 	case "type":
-		//foreignType := ""
-		//{{- if ne $.TargetVersionName "ga" }}
-		//if foreignTypeObject, ok := objectB["foreignTypeDefinition"]; ok {
-		//	foreignType = foreignTypeObject.(string)
-		//}
-		// When foreignTypeDefinition is present, don't need to check type.
-		//_, okA := objectA["foreignTypeDefinition"]
-		//_, okB := objectB["foreignTypeDefinition"]
-		//if false || okA && okB {
-		//	return true
-		//}
-		//{{- end }}
 		if valA == nil || valB == nil {
 			return false
 		}
@@ -343,11 +331,9 @@ func resourceBigQueryTableSchemaIsChangeable(old, new interface{}, isExternalTab
 			unionOfKeys[key] = true
 		}
 
-		log.Printf("[DEBUG] unionOfKeys: %v", unionOfKeys)
 		{{- if ne $.TargetVersionName "ga" }}
 		// Disregard "type" and "fields" if "foreignTypeDefinition" is present since they may have been modified by the server.
 		if _, ok := unionOfKeys["foreignTypeDefinition"]; ok {
-			log.Printf("[DEBUG] foreignTypeDefinition present")
 			delete(unionOfKeys, "type")
 			delete(unionOfKeys, "fields")
 		}
@@ -367,14 +353,6 @@ func resourceBigQueryTableSchemaIsChangeable(old, new interface{}, isExternalTab
 					// This is invalid, so it shouldn't require a ForceNew
 					return true, nil
 				}
-				//{{- if ne $.TargetVersionName "ga" }}
-				// When "foreignTypeDefinition" is present, allow changes to "type".
-				//_, okOld := objectOld["foreignTypeDefinition"];
-				//_, okNew := objectNew["foreignTypeDefinition"]
-				//if false || okOld || okNew {
-				//	return true, nil
-				//}
-				//{{- end }}
 				if !bigQueryTableTypeEq(valOld.(string), valNew.(string)) {
 					return false, nil
 				}
@@ -387,12 +365,7 @@ func resourceBigQueryTableSchemaIsChangeable(old, new interface{}, isExternalTab
 				}
 			case "fields":
 				return resourceBigQueryTableSchemaIsChangeable(valOld, valNew, isExternalTable, false)
-			//{{- if ne $.TargetVersionName "ga" }}
-			//case "foreignTypeDefinition":
-			//	if valOld != valNew {
-			//		return false, nil
-			//	}
-			//{{- end }}
+
 				// other parameters: description, policyTags and
 				// policyTags.names[] are changeable
 			}
