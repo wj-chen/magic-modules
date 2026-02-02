@@ -77,7 +77,7 @@ development environment.&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;In the Google Cloud console, on the project selector page, select or
-&lt;a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects"&gt;create a Google Cloud project&lt;/a&gt;.&lt;/p&gt;
+&lt;a href="https://docs.cloud.google.com/resource-manager/docs/creating-managing-projects"&gt;create a Google Cloud project&lt;/a&gt;.&lt;/p&gt;
 &lt;blockquote class='book-hint note'&gt;
 &lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; If you don&amp;rsquo;t already have a project to use for testing changes to
 the Terraform providers, create a project instead of selecting an existing
@@ -333,7 +333,6 @@ Presubmit VCR tests do not run in GA. Manual testing is required for promoted GA
 &lt;p&gt;The name of the Terraform resource. For example, &amp;ldquo;google_cloudfunctions2_function&amp;rdquo;.&lt;/p&gt;
 &lt;h3 id="generation_type"&gt;&lt;code&gt;generation_type&lt;/code&gt;&lt;a class="anchor" href="#generation_type"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;The generation method used to create the Terraform resource. For example, &amp;ldquo;mmv1&amp;rdquo;, &amp;ldquo;dcl&amp;rdquo;, &amp;ldquo;handwritten&amp;rdquo;.&lt;/p&gt;
-&lt;h2 id="optional"&gt;Optional&lt;a class="anchor" href="#optional"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;h3 id="api_service_name"&gt;&lt;code&gt;api_service_name&lt;/code&gt;&lt;a class="anchor" href="#api_service_name"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;The base name of the API used for this resource. For example, &amp;ldquo;cloudfunctions.googleapis.com&amp;rdquo;.&lt;/p&gt;
 &lt;h3 id="api_version"&gt;&lt;code&gt;api_version&lt;/code&gt;&lt;a class="anchor" href="#api_version"&gt;#&lt;/a&gt;&lt;/h3&gt;
